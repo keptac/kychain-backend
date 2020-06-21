@@ -34,72 +34,86 @@ passport.serializeUser(function (user, done) {
 });
 
 router.post('/login', async (req, res) => {
-  const conn = await connection(dbConfig).catch(e => {});
-  const email = req.body.email;
-  const password = req.body.password;
-  const kycId = req.body.kycId;
 
-  const refreshToken = randtoken.uid(256);
-  const self_signedDecrypt = new Cryptr(kycId);
+  try {
+    const conn = await connection(dbConfig).catch(e => {});
+    const email = req.body.email;
+    const password = req.body.password;
+    const kycId = req.body.kycId;
 
-  const results = await query(conn, `SELECT * FROM auth_table WHERE email = '${email}'`).catch(console.log);
-  if (results.length > 0) {
-    try {
-      console.log('kychain - ' + Date() + '> --------------|Decrypting data ...|---------------');
+    const refreshToken = randtoken.uid(256);
+    const self_signedDecrypt = new Cryptr(kycId);
 
-      _tempPass = cryptr.decrypt(results[0].password);
-      _tempPasstwo = self_signedDecrypt.decrypt(_tempPass);
+    const results = await query(conn, `SELECT * FROM auth_table WHERE email = '${email}'`).catch(console.log);
+    if (results.length > 0) {
+      try {
+        console.log('kychain - ' + Date() + '> --------------|Decrypting data ...|---------------');
 
-      if ((_tempPasstwo == password) && (cryptr.decrypt(results[0].kycId) == kycId)) {
-        const user = {
-          'recordId': kycId,
-          'recordHash': results[0].kycId
-        };
+        _tempPass = cryptr.decrypt(results[0].password);
+        _tempPasstwo = self_signedDecrypt.decrypt(_tempPass);
 
-        const token = jwt.sign(user, SECRET, {
-          expiresIn: 10000
-        });
+        if ((_tempPasstwo == password) && (cryptr.decrypt(results[0].kycId) == kycId)) {
+          const user = {
+            'recordId': kycId,
+            'recordHash': results[0].kycId
+          };
 
-        refreshTokens[refreshToken] = email;
+          const token = jwt.sign(user, SECRET, {
+            expiresIn: 10000
+          });
 
-        res.status(201).json({
-          'statusCode': 201,
-          'message': 'success',
-          'responseBody': {
-            'kycId': kycId,
-            'jwt': token,
-            'refreshToken': refreshToken
-          }
-        });
-        res.end();
-      } else {
+          refreshTokens[refreshToken] = email;
 
-        res.status(403).send({
-          'statusCode': 403,
-          'message': 'Incorrect Credentials',
+          res.status(201).json({
+            'statusCode': 201,
+            'message': 'success',
+            'responseBody': {
+              'kycId': kycId,
+              'jwt': token,
+              'refreshToken': refreshToken
+            }
+          });
+          res.end();
+        } else {
+
+          res.status(403).send({
+            'statusCode': 403,
+            'message': 'Incorrect Credentials',
+          });
+          res.end();
+        }
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({
+          'statusCode': 500,
+          'message': 'Server error',
         });
         res.end();
       }
-    } catch (error) {
-      console.log(error);
-      res.status(500).send({
-        'statusCode': 500,
-        'message': 'Server error',
+
+    } else {
+      console.log('kychain - ' + Date() + '> --------------|Login Failed:: Bad Credentials...|---------------');
+      res.status(200).send({
+        'statusCode': 200,
+        'message': 'failed',
+        'responseBody': {
+          'reason': 'User not found exist'
+        }
       });
-      res.end();
     }
 
-  } else {
+    res.end();
+  } catch (error) {
+    console.log('kychain - ' + Date() + '> --------------|Missing Fields...|---------------');
+    console.log(error);
     res.status(200).send({
       'statusCode': 200,
       'message': 'failed',
       'responseBody': {
-        'reason': 'User not found exist'
+        'reason': 'Unexpected system malfunction occured'
       }
     });
   }
-
-  res.end();
 });
 
 router.post('/logout', function (req, res) {

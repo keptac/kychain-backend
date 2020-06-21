@@ -23,9 +23,8 @@ router.put('/approve/:id', async (req, res) => {
     try {
         console.log('kychain - ' + Date() + '> --------------|Approve: Hyperledger connected |---------------');
         axios.post('http://localhost:4000/api/nmb/email/send', {
-
-            "emailAddress": emailAddress,
-            "messageBody": message
+            "id": emailAddress,
+            "decision": message
         }).then(async function (response) {
             console.log(response);
             res.status(201).send({

@@ -73,8 +73,8 @@ router.post("/face", (req, res) => {
 
 // Update proof of residence
 router.post("/update", (req, res) => {
-    var pofImageName = req.body.face.name;
-    var pofImageUpd = req.body.face.image;
+    var pofImageName = req.body.pof.name;
+    var pofImageUpd = req.body.pof.image;
     var pofRealFile = Buffer.from(pofImageUpd, "base64");
     fs.writeFile(pathFolder, pofRealFile, function (err) {
         if (err)
