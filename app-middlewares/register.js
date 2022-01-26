@@ -15,6 +15,8 @@ router.post('/verify', async (req, res) => {
     const gender = req.body.gender;
     const dob = req.body.dob;
 
+    console.log(idNumber + firstName + '-'+surname + '-'+dob + '-'+gender)
+
     const verifyUser = await query(conn, `SELECT * FROM registrar WHERE id_number = '${idNumber}' AND first_name='${firstName}' AND surname ='${surname}' AND gender='${gender}' AND dob='${dob}' AND status=1`);
     if (verifyUser.length == 0) {
         console.log('kychain - ' + Date() + '> --------------|Details Not Verifed|---------------');
@@ -46,7 +48,7 @@ router.post('/register', async (req, res) => {
     const surname = req.body.surname;
     const gender = req.body.gender;
     const dob = req.body.dob;
-    const email = req.body.email;
+    const email = req.body.emailAddress;
     const phoneNumber = req.body.phoneNumber
     var _tempKycId = 'AutoGenId';
 
@@ -80,7 +82,7 @@ router.post('/register', async (req, res) => {
         const _passtwo = dblEncrypt.encrypt(req.body.password);
         const  _password = cryptr.encrypt(_passtwo);
         
-        const _pofImageUpdLink = dblEncrypt.encrypt(req.body.pofImageUpdLink);
+        const _pofImageUpdLink = dblEncrypt.encrypt(req.body.pofImgLink);
         const _idImgLink = dblEncrypt.encrypt(req.body.idImgLink);
         const _faceImgLink = dblEncrypt.encrypt(req.body.faceImgLink);
 
